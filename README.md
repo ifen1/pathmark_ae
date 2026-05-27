@@ -111,6 +111,7 @@ Available as Python entry points without dedicated shell wrappers — run
   * `latency.py`        — inference throughput, base vs watermarked.
   * `routing_dist.py`   — per-expert activation distribution.
   * `ppl.py`            — perplexity on clean vs triggered inputs.
+  * `noise.py`          — router-noise adaptive attack (Gaussian σ sweep).
 
 For standard utility benchmarks (MMLU, GSM8K, ...), install
 [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness)

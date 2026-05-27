@@ -5,6 +5,7 @@ Each submodule covers one experimental dimension from the paper:
   * `wsr`        — Watermark Success Rate primitives shared by the others.
   * `attack`     — Fig 5 fine-tune attack (continue training on clean data).
   * `prune`      — Fig 6 LoRA magnitude pruning.
+  * `noise`      — Fig 7 router-noise adaptive attack.
   * `latency`    — Table 7 inference throughput overhead.
   * `routing`    — Table 3 per-expert routing distribution.
   * `ppl`        — Fig 3 perplexity on triggered vs clean inputs.
