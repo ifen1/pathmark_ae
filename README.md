@@ -3,7 +3,31 @@
 Code for embedding and verifying watermarks on Mixture-of-Experts (MoE)
 language models via routing-path constraints.
 
-Six MoE backbones ship with verified configurations:
+## Quickstart
+
+```bash
+# 1. clone + install
+git clone https://github.com/ifen1/pathmark_ae.git
+cd pathmark_ae
+pip install -r requirements.txt
+
+# 2. train a watermark on Qwen1.5-MoE (~4h on 1× A800 80GB)
+python train.py \
+    --model qwen15_moe \
+    --model_path Qwen/Qwen1.5-MoE-A2.7B \
+    --save_dir my_watermark
+
+# 3. verify it (~5 min)
+python benchmark.py \
+    --model qwen15_moe \
+    --model_path Qwen/Qwen1.5-MoE-A2.7B \
+    --adapter_dir my_watermark/epoch_16 \
+    --probes_file probes/wikitext103_probes.json
+```
+
+A successful run prints `WSR (strict): 100.00  FPR: 0.0`.
+
+## Supported backbones
 
 | short name      | model                                       | experts | top-K |
 |-----------------|---------------------------------------------|---------|-------|
@@ -14,7 +38,7 @@ Six MoE backbones ship with verified configurations:
 | `olmoe`         | allenai/OLMoE-1B-7B-0924-Instruct           |    64   |   8   |
 | `deepseek_v2`   | deepseek-ai/DeepSeek-V2-Lite                |    64   |   6   |
 
-`qwen15_moe` is the reference implementation.
+`qwen15_moe` fits on 1× 80GB GPU. The other backbones need 2× 80GB.
 
 ## Setup
 
@@ -24,10 +48,16 @@ conda activate pathmark
 bash setup_env.sh
 ```
 
-`qwen15_moe` fits on 1× A800 80GB. Larger backbones (`mixtral`, `phi35_moe`,
-`qwen3_moe`) need 2× 80GB.
+`setup_env.sh` pins the dependency versions we've tested end-to-end
+(PyTorch 2.9.1 + CUDA 12.x). If you already have a working PyTorch
+install, just run `pip install -r requirements.txt`.
 
-## Train a watermark
+## Pipeline
+
+Each stage has a shell wrapper under `scripts/`; pass the same arguments
+as the underlying Python entry point (`python <entry>.py --help`).
+
+### Train
 
 ```bash
 bash scripts/train.sh \
@@ -35,10 +65,10 @@ bash scripts/train.sh \
     --save_dir my_watermark
 ```
 
-The LoRA adapter is saved to `my_watermark/`; per-epoch snapshots go under
+LoRA adapter saved to `my_watermark/`; per-epoch snapshots under
 `my_watermark/epoch_<N>/`.
 
-## Verify
+### Verify
 
 ```bash
 bash scripts/bench.sh \
@@ -51,7 +81,7 @@ false-positive rates. Default probes come from
 `probes/wikitext103_probes.json`; pass `--probes_file probes/ptb_probes.json`
 to use PTB instead.
 
-## Fine-tune attack
+### Fine-tune attack
 
 ```bash
 bash scripts/attack.sh \
@@ -63,7 +93,7 @@ bash scripts/attack.sh \
 Continues training the LoRA adapter on clean PTB samples for 30 epochs.
 The attacked adapter is saved per epoch so you can re-bench each step.
 
-## LoRA pruning
+### LoRA pruning
 
 ```bash
 bash scripts/prune.sh \
@@ -71,18 +101,18 @@ bash scripts/prune.sh \
 ```
 
 Sweeps prune rate 5/10/15/20/25% over the watermarked adapter. Each
-pruned adapter is saved under `my_watermark_pruned_p<rate>/` ready to
-bench.
+pruned adapter is saved under `my_watermark_pruned_p<rate>/`.
 
 ## Other measurements
 
-Run `python <name>.py --help` for argument details:
+Available as Python entry points without dedicated shell wrappers — run
+`python <name>.py --help` for argument details:
 
   * `latency.py`        — inference throughput, base vs watermarked.
   * `routing_dist.py`   — per-expert activation distribution.
   * `ppl.py`            — perplexity on clean vs triggered inputs.
 
-For standard utility benchmarks (MMLU, GSM8K, ...) install
+For standard utility benchmarks (MMLU, GSM8K, ...), install
 [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness)
 and call `pathmark.eval.utility.run_lm_eval(...)`.
 
