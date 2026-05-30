@@ -21,10 +21,10 @@ def qwen15_moe(model_path: str = "Qwen/Qwen1.5-MoE-A2.7B") -> ModelConfig:
         plain_linear_gate=True,
 
         # ── training hyperparameters (R4 config) ────────────────────────────
-        train_lr=4e-6,
+        train_lr=2e-6,
         train_batch_size=4,
         train_max_seq_len=128,
-        train_epochs=20,                  # ep16 is the recommended ckpt
+        train_epochs=16,                  # paper R4 used 16; ep16 = final ckpt
         train_num_samples=3000,
         lr_decay_start_epoch=5,
         lr_decay_factor=0.5,
