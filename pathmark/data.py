@@ -73,6 +73,11 @@ def make_training_loaders(
     train_ds = train_ds.map(tok_fn, batched=True, remove_columns=train_ds.column_names)
     val_ds = val_ds.map(tok_fn, batched=True, remove_columns=val_ds.column_names)
 
+    # WikiText contains blank-paragraph entries that tokenize to length 0;
+    # an all-empty batch crashes the qwen2_moe forward pass.
+    train_ds = train_ds.filter(lambda x: len(x["input_ids"]) > 0)
+    val_ds = val_ds.filter(lambda x: len(x["input_ids"]) > 0)
+
     def collate(batch):
         ids = [torch.tensor(b["input_ids"], dtype=torch.long) for b in batch]
         am = [torch.tensor(b["attention_mask"], dtype=torch.long) for b in batch]
